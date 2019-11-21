@@ -1,7 +1,7 @@
 import numpy as np
 
 """
-A self playing agent that uses regret matching to learn the optimal policy for rock-paper-scissors game.
+A self playing agent that uses regret matching to learn the optimal policy for rock-paper-scissors game reaching 'Nash equilibrium'.
 No matter what the initial policy is it eventually converges to [0.33, 0.33, 0.33] if enough iterations are made.
 """
 
