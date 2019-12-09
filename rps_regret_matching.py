@@ -1,7 +1,7 @@
 import numpy as np
 
 """
-A self playing agent that uses regret matching to learn the optimal policy for rock-paper-scissors game reaching 'Nash equilibrium'.
+A self playing agent that uses regret matching to learn the optimal policy for rock-paper-scissors game.
 No matter what the initial policy is it eventually converges to [0.33, 0.33, 0.33] if enough iterations are made.
 """
 
@@ -9,9 +9,11 @@ No matter what the initial policy is it eventually converges to [0.33, 0.33, 0.3
 class RPSTrainer:
     def __init__(self):
         self.possible_actions = ['rock', 'paper', 'scissors']
-        self.initial_policy = np.array([5, 2, 100]) / np.sum([5, 2, 100])
+        self.n_actions = len(self.possible_actions)
+        self.initial_policy = np.array([1, 1, 1]) / np.sum([1, 1, 1])
         self.policy_agent = self.initial_policy
-        self.regret_sums_agent = np.array([0, 0, 0])
+        self.avg_policy = np.zeros(self.n_actions)
+        self.regret_sums_agent = np.zeros(self.n_actions)
 
     @staticmethod
     def get_reward(action, opponents_action):
@@ -30,25 +32,27 @@ class RPSTrainer:
         regrets = []
         for action in self.possible_actions:
             possible_reward = self.get_reward(action, opponents_action)
-            regrets.append(np.maximum(possible_reward - reward, 0))
-
+            regrets.append(possible_reward - reward)
         regrets = np.array(regrets)
-        self.regret_sums_agent = np.maximum(self.regret_sums_agent + regrets, 0)
+        self.regret_sums_agent += regrets
 
     def update_policy(self):
-        normalizing_sum = np.sum(self.regret_sums_agent)
+        normalizing_sum = np.sum(np.maximum(self.regret_sums_agent, 0))
         if normalizing_sum > 0:
-            self.policy_agent = self.regret_sums_agent / normalizing_sum
-            return
+            self.policy_agent = np.maximum(self.regret_sums_agent, 0) / normalizing_sum
+        else:
+            self.policy_agent = self.initial_policy
+        self.avg_policy += self.policy_agent
 
-        self.policy_agent = self.initial_policy
-
-    def play_train(self):
-        for i in range(1000):
+    def play_train(self, n_iterations):
+        for i in range(n_iterations):
             action = self.get_action()
             opponents_action = self.get_action()
             reward = self.get_reward(action, opponents_action)
             self.derive_regrets(opponents_action, reward)
             self.update_policy()
 
-        print(f'rounded policy {np.round(self.policy_agent, 2)}')
+        print(f'rounded normalized average policy {np.round(self.avg_policy / np.sum(self.avg_policy), 2)}')
+
+
+RPSTrainer().play_train(1000)
